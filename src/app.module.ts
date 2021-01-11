@@ -6,8 +6,6 @@ import { ConfigModule } from '@nestjs/config'
 import { UserModule } from './user/user.module'
 import { User } from './user/user.entity'
 import { AuthModule } from './auth/auth.module'
-import { GoogleStrategy } from './auth/google/google.strategy'
-import { JwtStrategy } from './auth/jwt/jwt.strategy'
 
 @Module({
   imports: [
@@ -25,7 +23,7 @@ import { JwtStrategy } from './auth/jwt/jwt.strategy'
     UserModule,
     AuthModule,
   ],
-  providers: [GoogleStrategy, JwtStrategy],
+  providers: [],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

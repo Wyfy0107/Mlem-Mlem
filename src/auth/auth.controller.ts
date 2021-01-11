@@ -2,7 +2,7 @@ import { Controller, Get, Req, UseGuards } from '@nestjs/common'
 import { UserGoogleGuard } from './google/google.guard'
 import { UserJwtGuard } from './jwt/jwt.guard'
 import { AuthService } from './auth.service'
-import { User } from '../user/user.entity'
+import { AuthenticatedUser } from './types'
 
 @Controller('google')
 export class AuthController {
@@ -10,18 +10,12 @@ export class AuthController {
 
   @Get()
   @UseGuards(UserGoogleGuard)
-  async googleAuth(@Req() req) {}
+  googleAuth() {}
 
   @Get('redirect')
   @UseGuards(UserGoogleGuard)
   googleAuthRedirect(@Req() req) {
-    const user = req.user as User
-    const token = this.authService.sign(user.email)
-
-    return {
-      data: user,
-      token: token,
-    }
+    return this.authService.login(req.user as AuthenticatedUser)
   }
 
   @Get('test')

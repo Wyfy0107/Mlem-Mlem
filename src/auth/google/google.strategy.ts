@@ -2,9 +2,13 @@ import { PassportStrategy } from '@nestjs/passport'
 import { Strategy } from 'passport-google-oauth20'
 import { Injectable } from '@nestjs/common'
 
+import { UserService } from '../../user/user.service'
+import { User } from '../../user/user.entity'
+import { AuthenticatedUser } from '../types'
+
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor() {
+  constructor(private userService: UserService) {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -17,13 +21,21 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     accessToken: string,
     refreshToken: string,
     profile: any,
-  ): Promise<any> {
-    const { name, emails, photos } = profile
-    const user = {
-      email: emails[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
+  ): Promise<AuthenticatedUser> {
+    const { name, emails } = profile
+    const checkUser = await this.userService.findOne({
+      where: { email: emails[0].value },
+    })
+    if (checkUser) return checkUser
+
+    const newUser = {
+      email: emails[0].value as string,
+      firstName: name.givenName as string,
+      lastName: name.familyName as string,
     }
-    return user
+
+    const saveUser = await this.userService.repository.save(newUser)
+
+    return saveUser
   }
 }

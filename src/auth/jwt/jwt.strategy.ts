@@ -2,8 +2,7 @@ import { PassportStrategy } from '@nestjs/passport'
 import { Injectable } from '@nestjs/common'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
-import { JwtTokenPayload } from './types'
-import { User } from '../../user/user.entity'
+import { AuthenticatedUser } from '../types'
 import { UserService } from '../../user/user.service'
 
 @Injectable()
@@ -16,18 +15,22 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     })
   }
 
-  async validate(payload: JwtTokenPayload): Promise<Partial<User> | undefined> {
-    const user = await this.userService.findOne({
-      where: { email: payload.email },
-    })
+  async validate(email: string): Promise<AuthenticatedUser | undefined> {
+    try {
+      const user = await this.userService.findOne({
+        where: { email },
+      })
 
-    if (!user) return undefined
+      if (!user) return undefined
 
-    return {
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
+      return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 }
