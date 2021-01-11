@@ -30,7 +30,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         email: user.email,
       }
     } catch (error) {
-      //TODO Improve error handling label=bug enhancement
+      // TODO Improve error handling
+      // labels=bug
       console.log(error)
     }
   }
