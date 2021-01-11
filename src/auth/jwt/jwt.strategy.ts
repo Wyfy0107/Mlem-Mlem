@@ -31,7 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       }
     } catch (error) {
       // TODO: Improve error handling
-      // labels=bug
       console.log(error)
     }
   }
