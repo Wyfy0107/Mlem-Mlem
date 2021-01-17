@@ -16,7 +16,6 @@ import { BaseCrudController } from '../base.controller'
   },
   query: {
     maxLimit: 20,
-    alwaysPaginate: true,
   },
 })
 @Controller('user')

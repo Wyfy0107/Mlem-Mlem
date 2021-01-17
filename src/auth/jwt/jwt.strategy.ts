@@ -16,22 +16,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(email: string): Promise<AuthenticatedUser | undefined> {
-    try {
-      const user = await this.userService.findOne({
-        where: { email },
-      })
+    const user = await this.userService.findOne({
+      where: { email },
+    })
 
-      if (!user) return undefined
+    if (!user) return undefined
 
-      return {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-      }
-    } catch (error) {
-      // TODO: Improve error handling
-      console.log(error)
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: user.password,
     }
   }
 }

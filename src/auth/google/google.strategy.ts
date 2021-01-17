@@ -3,7 +3,6 @@ import { Strategy } from 'passport-google-oauth20'
 import { Injectable } from '@nestjs/common'
 
 import { UserService } from '../../user/user.service'
-import { User } from '../../user/user.entity'
 import { AuthenticatedUser } from '../types'
 
 @Injectable()
