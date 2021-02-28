@@ -1,5 +1,18 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, ExecutionContext } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
+import { Reflector } from '@nestjs/core'
 
 @Injectable()
-export class UserJwtGuard extends AuthGuard('jwt') {}
+export class UserJwtGuard extends AuthGuard('jwt') {
+  constructor(private reflector: Reflector) {
+    super()
+  }
+
+  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+    const noAuth = this.reflector.get<string[]>('no_auth', context.getHandler())
+    if (noAuth) {
+      return user
+    }
+    return super.handleRequest(err, user, info, context)
+  }
+}

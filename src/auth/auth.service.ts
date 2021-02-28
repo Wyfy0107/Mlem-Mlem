@@ -12,6 +12,6 @@ export class AuthService {
 
   login(user: AuthenticatedUser) {
     const token = this.sign(user.email)
-    return { user, token }
+    return { token }
   }
 }
