@@ -18,6 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(email: string): Promise<AuthenticatedUser | undefined> {
     const user = await this.userService.findOne({
       where: { email },
+      relations: ['website'],
     })
 
     if (!user) return undefined
@@ -28,6 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       lastName: user.lastName,
       email: user.email,
       password: user.password,
+      website: user.website,
     }
   }
 }

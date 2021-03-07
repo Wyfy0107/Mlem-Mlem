@@ -1,5 +1,12 @@
-import { Entity, BaseEntity, Column, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Entity,
+  BaseEntity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToOne,
+} from 'typeorm'
 import { IsString, IsEmail } from 'class-validator'
+import { WebData } from '../web-hosting/web.entity'
 
 @Entity()
 export class User extends BaseEntity {
@@ -21,4 +28,7 @@ export class User extends BaseEntity {
   @IsString()
   @Column()
   lastName: string
+
+  @OneToOne(() => WebData)
+  website: WebData
 }

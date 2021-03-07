@@ -1,4 +1,5 @@
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { ConfigModule } from '@nestjs/config'
 
 import { Module } from '@nestjs/common'
 import { WebHostingController } from './web-hosting.controller'
@@ -9,6 +10,10 @@ import { WebData } from './web.entity'
 @Module({
   controllers: [WebHostingController],
   providers: [WebService],
-  imports: [TypeOrmModule.forFeature([WebData]), AwsModule],
+  imports: [
+    ConfigModule.forRoot(),
+    TypeOrmModule.forFeature([WebData]),
+    AwsModule,
+  ],
 })
 export class WebHostingModule {}
