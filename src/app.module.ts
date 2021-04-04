@@ -2,16 +2,28 @@ import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Connection } from 'typeorm'
 import { ConfigModule } from '@nestjs/config'
+import { WinstonModule, utilities } from 'nest-winston'
+import winston from 'winston'
 
-import { UserModule } from './user/user.module'
+import { UserModule } from './users/user.module'
 import { AuthModule } from './auth/auth.module'
 import { WebHostingModule } from './web-hosting/web-hosting.module'
 import { AwsModule } from './aws/aws.module'
-import { User } from './user/user.entity'
-import { WebData } from './web-hosting/web.entity'
+import { User } from './users/user.entity'
+import { Website } from './web-hosting/website.entity'
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            utilities.format.nestLike(),
+          ),
+        }),
+      ],
+    }),
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -20,7 +32,7 @@ import { WebData } from './web-hosting/web.entity'
       username: 'postgres',
       password: 'secret',
       database: 'survey',
-      entities: [User, WebData],
+      entities: [User, Website],
       synchronize: true,
     }),
     UserModule,

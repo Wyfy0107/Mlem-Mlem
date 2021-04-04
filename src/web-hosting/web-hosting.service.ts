@@ -2,23 +2,26 @@ import { Injectable, Inject } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { S3, CloudFront, Route53 } from 'aws-sdk'
 import { Repository } from 'typeorm'
+import { Logger } from 'winston'
 
 import {
   AWS_S3_PROVIDER,
   AWS_ROUTE_53_PROVIDER,
   AWS_CLOUDFRONT_PROVIDER,
-} from 'src/aws/aws.constants'
-import { BaseCrudService } from 'src/base.service'
-import { WebData } from './web.entity'
-import { AuthenticatedUser } from 'src/auth/types'
+} from '../aws/aws.constants'
+import { BaseCrudService } from '../base.service'
+import { Website } from './website.entity'
+import { AuthenticatedUser } from '../auth/types'
+import { InjectLogger } from '../app.decorator'
 
 @Injectable()
-export class WebService extends BaseCrudService<WebData> {
+export class WebService extends BaseCrudService<Website> {
   constructor(
-    @InjectRepository(WebData) repo: Repository<WebData>,
+    @InjectRepository(Website) repo: Repository<Website>,
     @Inject(AWS_S3_PROVIDER) private s3: S3,
     @Inject(AWS_ROUTE_53_PROVIDER) private route53: Route53,
     @Inject(AWS_CLOUDFRONT_PROVIDER) private cloudfront: CloudFront,
+    @InjectLogger() private logger: Logger,
   ) {
     super(repo)
   }
@@ -46,7 +49,7 @@ export class WebService extends BaseCrudService<WebData> {
 
       return Promise.all(fileUploads)
     } catch (error) {
-      console.log(error.message)
+      this.logger.error(error.message)
       return error.message as string
     }
   }
@@ -61,7 +64,7 @@ export class WebService extends BaseCrudService<WebData> {
       await this.configureBucketWebsite(uploadParams.Bucket)
       return res
     } catch (error) {
-      console.log(error.message)
+      this.logger.error(error.message)
       return error.message as string
     }
   }
@@ -81,7 +84,7 @@ export class WebService extends BaseCrudService<WebData> {
       }
       return await this.s3.putBucketWebsite(params).promise()
     } catch (error) {
-      console.log(error.message)
+      this.logger.error(error.message)
       return error.message as string
     }
   }
@@ -90,19 +93,20 @@ export class WebService extends BaseCrudService<WebData> {
     try {
       const params = {
         Bucket: bucketName,
-        Policy: `{
-                  "Version": "2012-10-17",
-                  "Statement": [{ 
-                    "Effect": "Allow",
-                    "Principal": {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${originId}"},
-                    "Action": [ "s3:GetObject" ],
-                    "Resource": ["arn:aws:s3:::${bucketName}/*"]
-                   }]
-                 }`,
+        Policy: `
+        {
+          "Version": "2012-10-17",
+          "Statement": [{ 
+            "Effect": "Allow",
+            "Principal": {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${originId}"},
+            "Action": [ "s3:GetObject" ],
+            "Resource": ["arn:aws:s3:::${bucketName}/*"]
+            }]
+        }`,
       }
       return await this.s3.putBucketPolicy(params).promise()
     } catch (error) {
-      console.log(error.message)
+      this.logger.error(error.message)
       return error.message as string
     }
   }
@@ -115,7 +119,7 @@ export class WebService extends BaseCrudService<WebData> {
     try {
       const params = {
         DistributionConfig: {
-          CallerReference: Date.now().toString(),
+          CallerReference: websiteDomain,
           Aliases: {
             Quantity: 1,
             Items: [websiteDomain],
@@ -127,11 +131,11 @@ export class WebService extends BaseCrudService<WebData> {
               {
                 Id: bucketDomain,
                 DomainName: bucketDomain,
+                S3OriginConfig: {
+                  OriginAccessIdentity: `origin-access-identity/cloudfront/${originId}`,
+                },
               },
             ],
-            S3OriginConfig: {
-              OriginAccessIdentity: `origin-access-identity/cloudfront/${originId}`,
-            },
           },
           DefaultCacheBehavior: {
             TargetOriginId: bucketDomain,
@@ -147,30 +151,36 @@ export class WebService extends BaseCrudService<WebData> {
             MinTTL: 0,
             DefaultTTL: 3600,
             MaxTTL: 86400,
+            ForwardedValues: {
+              QueryString: false,
+              Cookies: {
+                Forward: 'none',
+              },
+            },
           },
           Comment: `Cloudfront distribution for ${bucketDomain}`,
           Enabled: true,
           ViewerCertificate: {
             CloudFrontDefaultCertificate: false,
-            ACMCertificateArn: process.env.CERTIFICATE_ARN,
+            ACMCertificateArn: process.env.AWS_CERTIFICATE_ARN,
             SSLSupportMethod: 'sni-only',
           },
         },
       }
-      return await this.cloudfront
+
+      return this.cloudfront
         .createDistribution(params)
         .promise()
         .then((res) => res.Distribution)
     } catch (error) {
-      console.log(error.message)
-      return error.message as string
+      this.logger.error(error.message)
     }
   }
 
   async createCloudFrontOAI(websiteDomain: string) {
     const params = {
       CloudFrontOriginAccessIdentityConfig: {
-        CallerReference: Date.now().toString(),
+        CallerReference: websiteDomain,
         Comment: `OAI for ${websiteDomain}`,
       },
     }
@@ -195,38 +205,36 @@ export class WebService extends BaseCrudService<WebData> {
     return res
   }
 
-  async createRoute53Record(cloudfrontDomain: string, websiteDomain: string) {
-    // Create traffic policy
-    const document = `
-      {
-        "AWSPolicyFormatVersion": "2015-10-01",
-        "RecordType": "A",
-        "Endpoints": {
-          "Type": cloudfront,
-          "Region": ${process.env.AWS_REGION},
-          "Value": ${cloudfrontDomain}
-        }
+  async createRoute53Record(
+    cloudfrontDist: CloudFront.Distribution,
+    websiteDomain: string,
+  ) {
+    try {
+      // Create traffic policy
+      const document = {
+        ChangeBatch: {
+          Changes: [
+            {
+              Action: 'CREATE',
+              ResourceRecordSet: {
+                AliasTarget: {
+                  DNSName: cloudfrontDist.DomainName,
+                  EvaluateTargetHealth: false,
+                  HostedZoneId: process.env.AWS_CLOUDFRONT_HOSTED_ZONE_ID,
+                },
+                Name: websiteDomain,
+                Type: 'A',
+              },
+            },
+          ],
+          Comment: `Route53 record for ${websiteDomain}`,
+        },
+        HostedZoneId: process.env.AWS_ROUTE_53_HOSTED_ZONE_ID,
       }
-    `
-    const policyParams = {
-      Document: document,
-      Name: cloudfrontDomain,
+
+      return this.route53.changeResourceRecordSets(document).promise()
+    } catch (error) {
+      this.logger.error(error.message)
     }
-
-    const { Id, Version } = await this.route53
-      .createTrafficPolicy(policyParams)
-      .promise()
-      .then((res) => res.TrafficPolicy)
-
-    // Create traffic policy instance
-    const instanceParams = {
-      HostedZoneId: process.env.AWS_ROUTE_53_HOSTED_ZONE_ID,
-      Name: websiteDomain,
-      TTL: 0,
-      TrafficPolicyId: Id,
-      TrafficPolicyVersion: Version,
-    }
-
-    return this.route53.createTrafficPolicyInstance(instanceParams)
   }
 }

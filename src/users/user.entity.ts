@@ -4,22 +4,24 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToOne,
+  JoinColumn,
 } from 'typeorm'
 import { IsString, IsEmail } from 'class-validator'
-import { WebData } from '../web-hosting/web.entity'
+import { Website } from '../web-hosting/website.entity'
 
-@Entity()
+export enum Role {
+  ADMIN = 'admin',
+  USER = 'user',
+}
+
+@Entity('users')
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
   @IsEmail()
-  @Column()
+  @Column({ unique: true })
   email: string
-
-  @IsString()
-  @Column({ nullable: true })
-  password: string
 
   @IsString()
   @Column()
@@ -29,6 +31,10 @@ export class User extends BaseEntity {
   @Column()
   lastName: string
 
-  @OneToOne(() => WebData)
-  website: WebData
+  @OneToOne(() => Website, (website) => website.user, { eager: true })
+  @JoinColumn()
+  website: Website
+
+  @Column({ type: 'enum', enum: Role, default: Role.USER })
+  role: Role
 }

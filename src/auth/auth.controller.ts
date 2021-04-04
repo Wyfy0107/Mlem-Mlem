@@ -2,6 +2,7 @@ import { Controller, Get, Req, UseGuards } from '@nestjs/common'
 import { UserGoogleGuard } from './google/google.guard'
 import { AuthService } from './auth.service'
 import { AuthenticatedUser } from './types'
+import { User } from '../users/user.decorator'
 
 @Controller()
 export class AuthController {
@@ -13,7 +14,7 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(UserGoogleGuard)
-  googleAuthRedirect(@Req() req) {
-    return this.authService.login(req.user as AuthenticatedUser)
+  googleAuthRedirect(@User() user: AuthenticatedUser) {
+    return this.authService.login(user)
   }
 }

@@ -6,10 +6,10 @@ import {
   OneToOne,
 } from 'typeorm'
 import { IsString } from 'class-validator'
-import { User } from '../user/user.entity'
+import { User } from '../users/user.entity'
 
-@Entity()
-export class WebData extends BaseEntity {
+@Entity('websites')
+export class Website extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -17,16 +17,16 @@ export class WebData extends BaseEntity {
   @IsString()
   alias: string
 
-  @OneToOne(() => User)
+  @OneToOne(() => User, (user) => user.website, { cascade: true })
   user: User
 
   // This is also the bucket name
-  public get getWebsiteDomain() {
+  get getWebsiteDomain() {
     const domain = `${this.alias}.mlem-mlem.net`
     return domain
   }
 
-  public get getBucketDomain() {
-    return `http://${this.getWebsiteDomain}.s3-website-us-east-1.amazonaws.com`
+  get getBucketDomain() {
+    return `${this.getWebsiteDomain}.s3.us-east-1.amazonaws.com`
   }
 }

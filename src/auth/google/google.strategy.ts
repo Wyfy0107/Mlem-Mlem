@@ -1,40 +1,50 @@
 import { PassportStrategy } from '@nestjs/passport'
-import { Strategy } from 'passport-google-oauth20'
+import * as GoogleIdTokenStrategy from 'passport-google-id-token'
 import { Injectable } from '@nestjs/common'
 
-import { UserService } from '../../user/user.service'
+import { UserService } from '../../users/user.service'
 import { AuthenticatedUser } from '../types'
+import { GOOGLE_STRATEGY } from './google.const'
+
+type GoogleIdTokenResponse = {
+  payload: {
+    email: string
+    given_name: string
+    family_name: string
+    picture: string
+    sub: string
+    email_verified: boolean
+  }
+  [key: string]: any
+}
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
+export class GoogleStrategy extends PassportStrategy(
+  GoogleIdTokenStrategy,
+  GOOGLE_STRATEGY,
+) {
   constructor(private userService: UserService) {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/google/redirect',
-      scope: ['email', 'profile'],
     })
   }
 
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: any,
-  ): Promise<AuthenticatedUser> {
-    const { name, emails } = profile
-    const checkUser = await this.userService.findOne({
-      where: { email: emails[0].value },
+  async validate({
+    payload,
+  }: GoogleIdTokenResponse): Promise<AuthenticatedUser> {
+    const { given_name: firstName, family_name: lastName, email } = payload
+    const user = await this.userService.findOne({
+      where: { email },
     })
-    if (checkUser) return checkUser
+
+    if (user) return user
 
     const newUser = {
-      email: emails[0].value as string,
-      firstName: name.givenName as string,
-      lastName: name.familyName as string,
+      email,
+      firstName,
+      lastName,
     }
 
-    const saveUser = await this.userService.repository.save(newUser)
-
-    return saveUser
+    return this.userService.repository.save(newUser)
   }
 }

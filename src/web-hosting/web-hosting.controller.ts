@@ -1,35 +1,49 @@
-import { UploadedFiles, UseInterceptors, Post } from '@nestjs/common'
+import { UploadedFiles, UseInterceptors, Post, Body } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
+import { CloudFront } from 'aws-sdk'
 
-import AppController from 'src/app.decorator'
-import { AppFeatures } from 'src/app.types'
-import { WebData } from './web.entity'
+import AppController from '../app.decorator'
+import { AppFeatures } from '../app.types'
+import { Website } from './website.entity'
 import { WebService } from './web-hosting.service'
-import { BaseCrudController } from 'src/base.controller'
-import { User } from '../user/user.decorator'
-import { AuthenticatedUser } from 'src/auth/types'
+import { BaseCrudController } from '../base.controller'
+import { User } from '../users/user.decorator'
+import { AuthenticatedUser } from '../auth/types'
+
+type RecordPayload = {
+  cloudfrontDist: CloudFront.Distribution
+  websiteDomain: string
+}
 
 @AppController(AppFeatures.WebHosting, {
-  model: { type: WebData },
+  model: { type: Website },
 })
-export class WebHostingController extends BaseCrudController<WebData> {
+export class WebHostingController extends BaseCrudController<Website> {
   constructor(public service: WebService) {
     super()
   }
 
-  @UseInterceptors(FilesInterceptor('files'))
-  @Post('bucket/upload')
-  createOne(@UploadedFiles() files: any[], @User() user: AuthenticatedUser) {
-    return this.service.uploadStaticFiles(user.website.getWebsiteDomain, files)
-  }
-
-  @Post('bucket')
+  @Post('/bucket')
   createBucket(@User() user: AuthenticatedUser) {
     return this.service.createBucket(user.website.getWebsiteDomain)
   }
 
-  @Post('oai')
+  @Post('/oai')
   createOAI(@User() user: AuthenticatedUser) {
     return this.service.createAndConfigureCloudFront(user)
+  }
+
+  @Post('/record')
+  createRecord(@Body() body: RecordPayload) {
+    return this.service.createRoute53Record(
+      body.cloudfrontDist,
+      body.websiteDomain,
+    )
+  }
+
+  @UseInterceptors(FilesInterceptor('files'))
+  @Post('/bucket/upload')
+  createOne(@UploadedFiles() files: any[], @User() user: AuthenticatedUser) {
+    return this.service.uploadStaticFiles(user.website.getWebsiteDomain, files)
   }
 }
