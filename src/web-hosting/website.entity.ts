@@ -13,7 +13,7 @@ export class Website extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column()
+  @Column({ unique: true })
   @IsString()
   alias: string
 
