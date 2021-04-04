@@ -1,11 +1,12 @@
+import { CrudRequest, Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
+import { Body, Post } from '@nestjs/common'
+
 import { UserService } from './user.service'
 import { Role, User } from './user.entity'
 import { BaseCrudController } from '../base.controller'
 import AppController from '../app.decorator'
 import { AppFeatures } from '../app.types'
 import { WithRole, BypassAuth } from '../auth/auth.decorator'
-import { CrudRequest, Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
-import { Body, Post } from '@nestjs/common'
 
 @AppController(AppFeatures.Users, {
   model: {

@@ -9,8 +9,29 @@ jobs:
   open-issue:
     runs-on: 'ubuntu-latest'
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
+      - name: Set up node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
 
-      - name: lint
-        run: yarn run lint
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Set up cache
+        uses: actions/cache@v1
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint code
+        run: yarn lint
