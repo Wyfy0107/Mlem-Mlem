@@ -201,14 +201,24 @@ export class WebService extends BaseCrudService<Website> {
       const originId = await this.createCloudFrontOAI(
         user.website.getWebsiteDomain,
       )
-      const res = await this.createCloudfrontDist(
+      const cloudfrontDist = await this.createCloudfrontDist(
         user.website.getWebsiteDomain,
         user.website.getBucketDomain,
         originId,
       )
 
+      const update = {
+        originId,
+        cloudfrontDist,
+      }
+
+      const web = await this.repository.findOne({ alias: user.website.alias })
+      web.cloudfrontDist = cloudfrontDist
+      web.originId = originId
+      await this.repository.save(web)
+
       await this.configureBucketPolicy(user.website.getWebsiteDomain, originId)
-      return res
+      return update
     } catch (error) {
       this.logger.error(error)
       throw new InternalServerErrorException(error.message)

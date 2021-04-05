@@ -17,6 +17,12 @@ export class Website extends BaseEntity {
   @IsString()
   alias: string
 
+  @Column({ type: 'jsonb', nullable: true })
+  cloudfrontDist: Record<string, any>
+
+  @Column({ nullable: true, unique: true })
+  originId: string
+
   @OneToOne(() => User, (user) => user.website, { cascade: true })
   user: User
 
