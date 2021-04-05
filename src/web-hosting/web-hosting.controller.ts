@@ -1,6 +1,5 @@
-import { UploadedFiles, UseInterceptors, Post, Body } from '@nestjs/common'
+import { UploadedFiles, UseInterceptors, Post } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
-import { CloudFront } from 'aws-sdk'
 
 import AppController from '../app.decorator'
 import { AppFeatures } from '../app.types'
@@ -9,11 +8,6 @@ import { WebService } from './web-hosting.service'
 import { BaseCrudController } from '../base.controller'
 import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
-
-type RecordPayload = {
-  cloudfrontDist: CloudFront.Distribution
-  websiteDomain: string
-}
 
 @AppController(AppFeatures.WebHosting, {
   model: { type: Website },
@@ -34,11 +28,8 @@ export class WebHostingController extends BaseCrudController<Website> {
   }
 
   @Post('/record')
-  createRecord(@Body() body: RecordPayload) {
-    return this.service.createRoute53Record(
-      body.cloudfrontDist,
-      body.websiteDomain,
-    )
+  createRecord(@User() user: AuthenticatedUser) {
+    return this.service.createRoute53Record(user)
   }
 
   @UseInterceptors(FilesInterceptor('files'))

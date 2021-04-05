@@ -43,7 +43,7 @@ export class WebService extends BaseCrudService<Website> {
           Bucket: user.website.getWebsiteDomain,
           Body: file.buffer,
           Key: file.originalname,
-          ContentType: file.mimeType,
+          ContentType: file.mimetype,
         }
 
         return this.s3
@@ -73,7 +73,7 @@ export class WebService extends BaseCrudService<Website> {
         },
       }
 
-      return this.cloudfront.createInvalidation(params)
+      return this.cloudfront.createInvalidation(params).promise()
     } catch (error) {
       this.logger.error(error.message)
       throw new InternalServerErrorException(error.message)
@@ -246,10 +246,7 @@ export class WebService extends BaseCrudService<Website> {
     }
   }
 
-  async createRoute53Record(
-    cloudfrontDist: CloudFront.Distribution,
-    websiteDomain: string,
-  ) {
+  async createRoute53Record(user: AuthenticatedUser) {
     try {
       // Create traffic policy
       const document = {
@@ -259,16 +256,16 @@ export class WebService extends BaseCrudService<Website> {
               Action: 'CREATE',
               ResourceRecordSet: {
                 AliasTarget: {
-                  DNSName: cloudfrontDist.DomainName,
+                  DNSName: user.website.cloudfrontDist.DomainName,
                   EvaluateTargetHealth: false,
                   HostedZoneId: process.env.AWS_CLOUDFRONT_HOSTED_ZONE_ID,
                 },
-                Name: websiteDomain,
+                Name: user.website.getWebsiteDomain,
                 Type: 'A',
               },
             },
           ],
-          Comment: `Route53 record for ${websiteDomain}`,
+          Comment: `Route53 record for ${user.website.getWebsiteDomain}`,
         },
         HostedZoneId: process.env.AWS_ROUTE_53_HOSTED_ZONE_ID,
       }
