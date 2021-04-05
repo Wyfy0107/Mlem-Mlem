@@ -1,4 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common'
+import {
+  Injectable,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { S3, CloudFront, Route53 } from 'aws-sdk'
 import { Repository } from 'typeorm'
@@ -39,6 +43,7 @@ export class WebService extends BaseCrudService<Website> {
           Bucket: bucketName,
           Body: file.buffer,
           Key: file.originalname,
+          ContentType: file.mimeType,
         }
 
         return this.s3
@@ -93,8 +98,7 @@ export class WebService extends BaseCrudService<Website> {
     try {
       const params = {
         Bucket: bucketName,
-        Policy: `
-        {
+        Policy: `{
           "Version": "2012-10-17",
           "Statement": [{ 
             "Effect": "Allow",
@@ -174,6 +178,7 @@ export class WebService extends BaseCrudService<Website> {
         .then((res) => res.Distribution)
     } catch (error) {
       this.logger.error(error.message)
+      throw new InternalServerErrorException(error.message)
     }
   }
 
@@ -192,17 +197,22 @@ export class WebService extends BaseCrudService<Website> {
   }
 
   async createAndConfigureCloudFront(user: AuthenticatedUser) {
-    const originId = await this.createCloudFrontOAI(
-      user.website.getWebsiteDomain,
-    )
-    const res = await this.createCloudfrontDist(
-      user.website.getWebsiteDomain,
-      user.website.getBucketDomain,
-      originId,
-    )
+    try {
+      const originId = await this.createCloudFrontOAI(
+        user.website.getWebsiteDomain,
+      )
+      const res = await this.createCloudfrontDist(
+        user.website.getWebsiteDomain,
+        user.website.getBucketDomain,
+        originId,
+      )
 
-    await this.configureBucketPolicy(user.website.getWebsiteDomain, originId)
-    return res
+      await this.configureBucketPolicy(user.website.getWebsiteDomain, originId)
+      return res
+    } catch (error) {
+      this.logger.error(error)
+      throw new InternalServerErrorException(error.message)
+    }
   }
 
   async createRoute53Record(
@@ -235,6 +245,7 @@ export class WebService extends BaseCrudService<Website> {
       return this.route53.changeResourceRecordSets(document).promise()
     } catch (error) {
       this.logger.error(error.message)
+      throw new InternalServerErrorException(error.message)
     }
   }
 }

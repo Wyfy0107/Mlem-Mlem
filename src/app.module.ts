@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { Connection } from 'typeorm'
 import { ConfigModule } from '@nestjs/config'
 import { WinstonModule, utilities } from 'nest-winston'
-import winston from 'winston'
+import * as winston from 'winston'
 
 import { UserModule } from './users/user.module'
 import { AuthModule } from './auth/auth.module'
@@ -14,15 +14,20 @@ import { Website } from './web-hosting/website.entity'
 
 @Module({
   imports: [
-    WinstonModule.forRoot({
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            utilities.format.nestLike(),
-          ),
-        }),
-      ],
+    WinstonModule.forRootAsync({
+      useFactory: () => {
+        const config = {
+          transports: [
+            new winston.transports.Console({
+              format: winston.format.combine(
+                winston.format.timestamp(),
+                utilities.format.nestLike(),
+              ),
+            }),
+          ],
+        }
+        return config
+      },
     }),
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({

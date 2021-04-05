@@ -28,7 +28,7 @@ export class WebHostingController extends BaseCrudController<Website> {
     return this.service.createBucket(user.website.getWebsiteDomain)
   }
 
-  @Post('/oai')
+  @Post('/cloudfront')
   createOAI(@User() user: AuthenticatedUser) {
     return this.service.createAndConfigureCloudFront(user)
   }
