@@ -7,6 +7,7 @@ import {
 } from 'typeorm'
 import { IsString } from 'class-validator'
 import { User } from '../users/user.entity'
+import { CloudFront } from 'aws-sdk'
 
 @Entity('websites')
 export class Website extends BaseEntity {
@@ -18,7 +19,7 @@ export class Website extends BaseEntity {
   alias: string
 
   @Column({ type: 'jsonb', nullable: true })
-  cloudfrontDist: Record<string, any>
+  cloudfrontDist: CloudFront.Distribution
 
   @Column({ nullable: true, unique: true })
   originId: string

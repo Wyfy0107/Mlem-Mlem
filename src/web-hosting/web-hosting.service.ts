@@ -30,7 +30,7 @@ export class WebService extends BaseCrudService<Website> {
     super(repo)
   }
 
-  async uploadStaticFiles(bucketName: string, files: any[]) {
+  async uploadStaticFiles(user: AuthenticatedUser, files: any[]) {
     try {
       const checkValid = files.some(
         (file) =>
@@ -40,7 +40,7 @@ export class WebService extends BaseCrudService<Website> {
 
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
-          Bucket: bucketName,
+          Bucket: user.website.getWebsiteDomain,
           Body: file.buffer,
           Key: file.originalname,
           ContentType: file.mimeType,
@@ -52,10 +52,31 @@ export class WebService extends BaseCrudService<Website> {
           .then((res) => res.Bucket)
       })
 
+      await this.purgeCloudfront(user.website.cloudfrontDist.Id)
       return Promise.all(fileUploads)
     } catch (error) {
       this.logger.error(error.message)
       return error.message as string
+    }
+  }
+
+  async purgeCloudfront(distributionId: string) {
+    try {
+      const params = {
+        DistributionId: distributionId,
+        InvalidationBatch: {
+          CallerReference: new Date().toString(),
+          Paths: {
+            Quantity: 1,
+            Items: ['/*'],
+          },
+        },
+      }
+
+      return this.cloudfront.createInvalidation(params)
+    } catch (error) {
+      this.logger.error(error.message)
+      throw new InternalServerErrorException(error.message)
     }
   }
 
