@@ -54,7 +54,7 @@ jobs:
              yarn.lock dist
 
       - name: Deploy push bundle
-        run: |
+        run: >
           aws deploy push
           --application-name mlem-mlem-app
           --description "mlem-mlem backend revision"
@@ -64,7 +64,7 @@ jobs:
 
       - name: Create deployment
         if: github.event_name == 'push'
-        run: |
+        run: >
           aws deploy create-deployment
           --application-name mlem-mlem-app
           --deployment-config-name CodeDeployDefault.OneAtATime
