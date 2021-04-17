@@ -10,7 +10,7 @@ export class UserJwtGuard extends AuthGuard(JWT_STRATEGY) {
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    const noAuth = this.reflector.get<string[]>('no_auth', context.getHandler())
+    const noAuth = this.reflector.get<boolean>('no_auth', context.getHandler())
     if (noAuth) {
       return user
     }
