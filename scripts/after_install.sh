@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-cd /home/ubun/app
+cd /home/ubuntu/app
 sudo yarn
