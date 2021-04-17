@@ -8,6 +8,9 @@ import { WebService } from './web-hosting.service'
 import { BaseCrudController } from '../base.controller'
 import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
+import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
+
+type Payload = { alias: string }
 
 @AppController(AppFeatures.WebHosting, {
   model: { type: Website },
@@ -15,6 +18,16 @@ import { AuthenticatedUser } from '../auth/types'
 export class WebHostingController extends BaseCrudController<Website> {
   constructor(public service: WebService) {
     super()
+  }
+
+  @Override()
+  createOne(
+    @ParsedRequest() request,
+    @ParsedBody() body: Payload,
+    @User() user: AuthenticatedUser,
+  ) {
+    const payload = { alias: body.alias, user: { id: user.id } } as Website
+    return this.base.createOneBase(request, payload)
   }
 
   @Post('/bucket')
@@ -34,7 +47,7 @@ export class WebHostingController extends BaseCrudController<Website> {
 
   @UseInterceptors(FilesInterceptor('files'))
   @Post('/bucket/upload')
-  createOne(@UploadedFiles() files: any[], @User() user: AuthenticatedUser) {
+  uploadFiles(@UploadedFiles() files: any[], @User() user: AuthenticatedUser) {
     return this.service.uploadStaticFiles(user, files)
   }
 }
