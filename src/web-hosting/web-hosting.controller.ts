@@ -27,7 +27,9 @@ export class WebHostingController extends BaseCrudController<Website> {
     @User() user: AuthenticatedUser,
   ) {
     const payload = { alias: body.alias, user: { id: user.id } } as Website
-    return this.base.createOneBase(request, payload)
+    return this.base.createOneBase(request, payload).catch((error) => {
+      if (error.code === '23505') return `Alias ${body.alias} already exists`
+    })
   }
 
   @Post('/bucket')
