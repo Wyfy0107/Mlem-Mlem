@@ -1,4 +1,5 @@
 import { UploadedFiles, UseInterceptors, Post } from '@nestjs/common'
+import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
 import { FilesInterceptor } from '@nestjs/platform-express'
 
 import AppController from '../app.decorator'
@@ -8,7 +9,6 @@ import { WebService } from './web-hosting.service'
 import { BaseCrudController } from '../base.controller'
 import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
-import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
 
 type Payload = { alias: string }
 
@@ -50,6 +50,7 @@ export class WebHostingController extends BaseCrudController<Website> {
   @UseInterceptors(FilesInterceptor('files'))
   @Post('/bucket/upload')
   uploadFiles(@UploadedFiles() files: any[], @User() user: AuthenticatedUser) {
+    console.log('files', files)
     return this.service.uploadStaticFiles(user, files)
   }
 }

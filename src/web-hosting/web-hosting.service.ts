@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { S3, CloudFront, Route53 } from 'aws-sdk'
@@ -36,7 +37,11 @@ export class WebService extends BaseCrudService<Website> {
         (file) =>
           file.mimetype === 'text/html' && file.originalname === 'index.html',
       )
-      if (!checkValid) return 'Must include at least one index.html file'
+      if (!checkValid) {
+        throw new BadRequestException(
+          'Must include at least one index.html file',
+        )
+      }
 
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
