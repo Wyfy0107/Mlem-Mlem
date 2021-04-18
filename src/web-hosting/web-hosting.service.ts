@@ -33,16 +33,6 @@ export class WebService extends BaseCrudService<Website> {
 
   async uploadStaticFiles(user: AuthenticatedUser, files: any[]) {
     try {
-      const checkValid = files.some(
-        (file) =>
-          file.mimetype === 'text/html' && file.originalname === 'index.html',
-      )
-      if (!checkValid) {
-        throw new BadRequestException(
-          'Must include at least one index.html file',
-        )
-      }
-
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
           Bucket: user.website.getWebsiteDomain,
