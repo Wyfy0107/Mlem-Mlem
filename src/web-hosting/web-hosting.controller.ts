@@ -58,7 +58,6 @@ export class WebHostingController extends BaseCrudController<Website> {
   @UseInterceptors(AnyFilesInterceptor())
   @Post('/bucket/upload')
   uploadFiles(@UploadedFiles() files: File[], @User() user: AuthenticatedUser) {
-    console.log('files', files)
     return this.service.uploadStaticFiles(user, files)
   }
 }

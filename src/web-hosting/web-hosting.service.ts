@@ -103,7 +103,7 @@ export class WebService extends BaseCrudService<Website> {
           },
         },
       }
-      return await this.s3.putBucketWebsite(params).promise()
+      return this.s3.putBucketWebsite(params).promise()
     } catch (error) {
       this.logger.error(error.message)
       return error.message as string
@@ -124,7 +124,7 @@ export class WebService extends BaseCrudService<Website> {
             }]
         }`,
       }
-      return await this.s3.putBucketPolicy(params).promise()
+      return this.s3.putBucketPolicy(params).promise()
     } catch (error) {
       this.logger.error(error.message)
       return error.message as string
@@ -206,7 +206,7 @@ export class WebService extends BaseCrudService<Website> {
       },
     }
 
-    return await this.cloudfront
+    return this.cloudfront
       .createCloudFrontOriginAccessIdentity(params)
       .promise()
       .then((res) => res.CloudFrontOriginAccessIdentity.Id)
