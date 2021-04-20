@@ -2,7 +2,6 @@ import {
   Injectable,
   Inject,
   InternalServerErrorException,
-  BadRequestException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { S3, CloudFront, Route53 } from 'aws-sdk'
@@ -18,6 +17,7 @@ import { BaseCrudService } from '../base.service'
 import { Website } from './website.entity'
 import { AuthenticatedUser } from '../auth/types'
 import { InjectLogger } from '../app.decorator'
+import { File } from './web-hosting.controller'
 
 @Injectable()
 export class WebService extends BaseCrudService<Website> {
@@ -31,13 +31,13 @@ export class WebService extends BaseCrudService<Website> {
     super(repo)
   }
 
-  async uploadStaticFiles(user: AuthenticatedUser, files: any[]) {
+  async uploadStaticFiles(user: AuthenticatedUser, files: File[]) {
     try {
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
           Bucket: user.website.getWebsiteDomain,
           Body: file.buffer,
-          Key: file.originalname,
+          Key: file.fieldname,
           ContentType: file.mimetype,
         }
 

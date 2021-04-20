@@ -1,6 +1,6 @@
 import { UploadedFiles, UseInterceptors, Post } from '@nestjs/common'
 import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
-import { FilesInterceptor } from '@nestjs/platform-express'
+import { AnyFilesInterceptor } from '@nestjs/platform-express'
 
 import AppController from '../app.decorator'
 import { AppFeatures } from '../app.types'
@@ -11,6 +11,14 @@ import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
 
 type Payload = { alias: string }
+export type File = {
+  fieldname: string
+  originalname: string
+  encoding: string
+  mimetype: string
+  size: number
+  buffer: Buffer
+}
 
 @AppController(AppFeatures.WebHosting, {
   model: { type: Website },
@@ -47,9 +55,9 @@ export class WebHostingController extends BaseCrudController<Website> {
     return this.service.createRoute53Record(user)
   }
 
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(AnyFilesInterceptor())
   @Post('/bucket/upload')
-  uploadFiles(@UploadedFiles() files: any[], @User() user: AuthenticatedUser) {
+  uploadFiles(@UploadedFiles() files: File[], @User() user: AuthenticatedUser) {
     console.log('files', files)
     return this.service.uploadStaticFiles(user, files)
   }
