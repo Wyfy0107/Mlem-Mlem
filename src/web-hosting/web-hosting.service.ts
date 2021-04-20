@@ -112,18 +112,25 @@ export class WebService extends BaseCrudService<Website> {
 
   async configureBucketPolicy(bucketName: string, originId: string) {
     try {
+      const policy = {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Principal: {
+              AWS: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${originId}`,
+            },
+            Action: 's3:GetObject',
+            Resource: `arn:aws:s3:::${bucketName}/*`,
+          },
+        ],
+      }
+
       const params = {
         Bucket: bucketName,
-        Policy: `{
-          "Version": "2012-10-17",
-          "Statement": [{ 
-            "Effect": "Allow",
-            "Principal": {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${originId}"},
-            "Action": [ "s3:GetObject" ],
-            "Resource": ["arn:aws:s3:::${bucketName}/*"]
-            }]
-        }`,
+        Policy: JSON.stringify(policy),
       }
+
       return this.s3.putBucketPolicy(params).promise()
     } catch (error) {
       this.logger.error(error.message)
