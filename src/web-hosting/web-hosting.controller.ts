@@ -42,7 +42,7 @@ export class WebHostingController extends BaseCrudController<Website> {
 
   @Post('/bucket')
   createBucket(@User() user: AuthenticatedUser) {
-    return this.service.createBucket(user.website.getWebsiteDomain)
+    return this.service.createBucket(user.website.websiteDomain)
   }
 
   @Post('/cloudfront')

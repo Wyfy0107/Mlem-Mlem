@@ -9,7 +9,7 @@ async function bootstrap() {
   app.enableCors()
   app.use(json({ limit: '50mb' }))
   app.use(
-    urlencoded({ limit: '50mb', extended: true, parameterLimit: 100000000 }),
+    urlencoded({ limit: '50mb', extended: true, parameterLimit: 1000000 }),
   )
   await app.listen(process.env.PORT || 3000)
 }

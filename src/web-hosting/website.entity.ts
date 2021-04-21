@@ -28,12 +28,12 @@ export class Website extends BaseEntity {
   user: User
 
   // This is also the bucket name
-  get getWebsiteDomain() {
+  get websiteDomain() {
     const domain = `${this.alias}.mlem-mlem.net`
     return domain
   }
 
-  get getBucketDomain() {
-    return `${this.getWebsiteDomain}.s3.us-east-1.amazonaws.com`
+  get bucketDomain() {
+    return `${this.websiteDomain}.s3.us-east-1.amazonaws.com`
   }
 }

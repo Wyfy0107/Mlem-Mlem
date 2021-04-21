@@ -35,7 +35,7 @@ export class WebService extends BaseCrudService<Website> {
     try {
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
-          Bucket: user.website.getWebsiteDomain,
+          Bucket: user.website.websiteDomain,
           Body: file.buffer,
           Key: file.fieldname,
           ContentType: file.mimetype,
@@ -51,7 +51,7 @@ export class WebService extends BaseCrudService<Website> {
       return Promise.all(fileUploads)
     } catch (error) {
       this.logger.error(error.message)
-      return error.message as string
+      throw new InternalServerErrorException(error.message)
     }
   }
 
@@ -86,7 +86,7 @@ export class WebService extends BaseCrudService<Website> {
       return res
     } catch (error) {
       this.logger.error(error.message)
-      return error.message as string
+      throw new InternalServerErrorException(error.message)
     }
   }
 
@@ -106,7 +106,7 @@ export class WebService extends BaseCrudService<Website> {
       return this.s3.putBucketWebsite(params).promise()
     } catch (error) {
       this.logger.error(error.message)
-      return error.message as string
+      throw new InternalServerErrorException(error.message)
     }
   }
 
@@ -134,7 +134,7 @@ export class WebService extends BaseCrudService<Website> {
       return this.s3.putBucketPolicy(params).promise()
     } catch (error) {
       this.logger.error(error.message)
-      return error.message as string
+      throw new InternalServerErrorException(error.message)
     }
   }
 
@@ -222,11 +222,11 @@ export class WebService extends BaseCrudService<Website> {
   async createAndConfigureCloudFront(user: AuthenticatedUser) {
     try {
       const originId = await this.createCloudFrontOAI(
-        user.website.getWebsiteDomain,
+        user.website.websiteDomain,
       )
       const cloudfrontDist = await this.createCloudfrontDist(
-        user.website.getWebsiteDomain,
-        user.website.getBucketDomain,
+        user.website.websiteDomain,
+        user.website.bucketDomain,
         originId,
       )
 
@@ -240,7 +240,7 @@ export class WebService extends BaseCrudService<Website> {
       web.originId = originId
       await this.repository.save(web)
 
-      await this.configureBucketPolicy(user.website.getWebsiteDomain, originId)
+      await this.configureBucketPolicy(user.website.websiteDomain, originId)
       return update
     } catch (error) {
       this.logger.error(error)
@@ -262,12 +262,12 @@ export class WebService extends BaseCrudService<Website> {
                   EvaluateTargetHealth: false,
                   HostedZoneId: process.env.AWS_CLOUDFRONT_HOSTED_ZONE_ID,
                 },
-                Name: user.website.getWebsiteDomain,
+                Name: user.website.websiteDomain,
                 Type: 'A',
               },
             },
           ],
-          Comment: `Route53 record for ${user.website.getWebsiteDomain}`,
+          Comment: `Route53 record for ${user.website.websiteDomain}`,
         },
         HostedZoneId: process.env.AWS_ROUTE_53_HOSTED_ZONE_ID,
       }
