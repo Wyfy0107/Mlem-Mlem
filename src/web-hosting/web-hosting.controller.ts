@@ -4,6 +4,7 @@ import {
   Post,
   BadRequestException,
   UseGuards,
+  Param,
 } from '@nestjs/common'
 import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
@@ -69,13 +70,13 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @UseInterceptors(AnyFilesInterceptor())
-  @Post('/bucket/upload')
+  @Post('/bucket/upload/:alias')
   async uploadFiles(
     @UploadedFiles() files: File[],
-    @ParsedBody() body: Payload,
+    @Param('alias') alias: Payload,
   ) {
     const website = await this.service.repository.findOne({
-      where: { alias: body.alias },
+      where: { alias },
     })
 
     return this.service.uploadStaticFiles(website, files)
