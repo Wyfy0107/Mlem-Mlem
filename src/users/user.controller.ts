@@ -21,7 +21,7 @@ export class UserController extends BaseCrudController<User> {
     super()
   }
 
-  @WithRole(Role.ADMIN)
+  @WithRole(Role.Admin)
   getMany(@ParsedRequest() req: CrudRequest) {
     return this.base.getManyBase(req)
   }

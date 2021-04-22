@@ -10,7 +10,7 @@ import { AuthModule } from './auth/auth.module'
 import { WebHostingModule } from './web-hosting/web-hosting.module'
 import { AwsModule } from './aws/aws.module'
 import { User } from './users/user.entity'
-import { Website } from './web-hosting/website.entity'
+import { Websites } from './web-hosting/website.entity'
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { Website } from './web-hosting/website.entity'
       username: process.env.db_username,
       password: process.env.db_password,
       database: process.env.db_name,
-      entities: [User, Website],
+      entities: [User, Websites],
       synchronize: true,
     }),
     UserModule,

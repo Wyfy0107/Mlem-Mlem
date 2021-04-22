@@ -3,15 +3,15 @@ import {
   BaseEntity,
   Column,
   PrimaryGeneratedColumn,
-  OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm'
 import { IsString, IsEmail } from 'class-validator'
-import { Website } from '../web-hosting/website.entity'
+import { Websites } from '../web-hosting/website.entity'
 
 export enum Role {
-  ADMIN = 'admin',
-  USER = 'user',
+  Admin = 'admin',
+  User = 'user',
 }
 
 @Entity('users')
@@ -31,10 +31,10 @@ export class User extends BaseEntity {
   @Column()
   lastName: string
 
-  @OneToOne(() => Website, (website) => website.user, { eager: true })
+  @OneToMany(() => Websites, (website) => website.owner, { eager: true })
   @JoinColumn()
-  website: Website
+  websites: Websites[]
 
-  @Column({ type: 'enum', enum: Role, default: Role.USER })
+  @Column({ type: 'enum', enum: Role, default: Role.User })
   role: Role
 }

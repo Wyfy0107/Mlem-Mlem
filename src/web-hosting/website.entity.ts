@@ -3,14 +3,14 @@ import {
   BaseEntity,
   Column,
   PrimaryGeneratedColumn,
-  OneToOne,
+  ManyToOne,
 } from 'typeorm'
 import { IsString } from 'class-validator'
 import { User } from '../users/user.entity'
 import { CloudFront } from 'aws-sdk'
 
 @Entity('websites')
-export class Website extends BaseEntity {
+export class Websites extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -24,8 +24,8 @@ export class Website extends BaseEntity {
   @Column({ nullable: true, unique: true })
   originId: string
 
-  @OneToOne(() => User, (user) => user.website, { cascade: true })
-  user: User
+  @ManyToOne(() => User, (user) => user.websites, { cascade: true })
+  owner: User
 
   // This is also the bucket name
   get websiteDomain() {

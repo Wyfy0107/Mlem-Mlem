@@ -1,29 +1,25 @@
-import { UploadedFiles, UseInterceptors, Post } from '@nestjs/common'
+import {
+  UploadedFiles,
+  UseInterceptors,
+  Post,
+  BadRequestException,
+} from '@nestjs/common'
 import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
 
 import AppController from '../app.decorator'
 import { AppFeatures } from '../app.types'
-import { Website } from './website.entity'
+import { Websites } from './website.entity'
 import { WebService } from './web-hosting.service'
 import { BaseCrudController } from '../base.controller'
 import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
-
-type Payload = { alias: string }
-export type File = {
-  fieldname: string
-  originalname: string
-  encoding: string
-  mimetype: string
-  size: number
-  buffer: Buffer
-}
+import { Payload, File, UniqueExceptionCode } from './types'
 
 @AppController(AppFeatures.WebHosting, {
-  model: { type: Website },
+  model: { type: Websites },
 })
-export class WebHostingController extends BaseCrudController<Website> {
+export class WebHostingController extends BaseCrudController<Websites> {
   constructor(public service: WebService) {
     super()
   }
@@ -34,30 +30,51 @@ export class WebHostingController extends BaseCrudController<Website> {
     @ParsedBody() body: Payload,
     @User() user: AuthenticatedUser,
   ) {
-    const payload = { alias: body.alias, user: { id: user.id } } as Website
+    const payload = { alias: body.alias, owner: { id: user.id } } as Websites
+
     return this.base.createOneBase(request, payload).catch((error) => {
-      if (error.code === '23505') return `Alias ${body.alias} already exists`
+      if (error.code === UniqueExceptionCode)
+        throw new BadRequestException(`Alias ${body.alias} already exists`)
     })
   }
 
   @Post('/bucket')
-  createBucket(@User() user: AuthenticatedUser) {
-    return this.service.createBucket(user.website.websiteDomain)
+  async createBucket(@ParsedBody() body: Payload) {
+    const website = await this.service.repository.findOne({
+      where: { alias: body.alias },
+    })
+
+    return this.service.createBucket(website.websiteDomain)
   }
 
   @Post('/cloudfront')
-  createOAI(@User() user: AuthenticatedUser) {
-    return this.service.createAndConfigureCloudFront(user)
+  async createOAI(@ParsedBody() body: Payload) {
+    const website = await this.service.repository.findOne({
+      where: { alias: body.alias },
+    })
+
+    return this.service.createAndConfigureCloudFront(website)
   }
 
   @Post('/record')
-  createRecord(@User() user: AuthenticatedUser) {
-    return this.service.createRoute53Record(user)
+  async createRecord(@ParsedBody() body: Payload) {
+    const website = await this.service.repository.findOne({
+      where: { alias: body.alias },
+    })
+
+    return this.service.createRoute53Record(website)
   }
 
   @UseInterceptors(AnyFilesInterceptor())
   @Post('/bucket/upload')
-  uploadFiles(@UploadedFiles() files: File[], @User() user: AuthenticatedUser) {
-    return this.service.uploadStaticFiles(user, files)
+  async uploadFiles(
+    @UploadedFiles() files: File[],
+    @ParsedBody() body: Payload,
+  ) {
+    const website = await this.service.repository.findOne({
+      where: { alias: body.alias },
+    })
+
+    return this.service.uploadStaticFiles(website, files)
   }
 }

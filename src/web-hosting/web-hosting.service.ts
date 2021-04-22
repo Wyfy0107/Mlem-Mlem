@@ -14,15 +14,14 @@ import {
   AWS_CLOUDFRONT_PROVIDER,
 } from '../aws/aws.constants'
 import { BaseCrudService } from '../base.service'
-import { Website } from './website.entity'
-import { AuthenticatedUser } from '../auth/types'
+import { Websites } from './website.entity'
 import { InjectLogger } from '../app.decorator'
-import { File } from './web-hosting.controller'
+import { File } from './types'
 
 @Injectable()
-export class WebService extends BaseCrudService<Website> {
+export class WebService extends BaseCrudService<Websites> {
   constructor(
-    @InjectRepository(Website) repo: Repository<Website>,
+    @InjectRepository(Websites) repo: Repository<Websites>,
     @Inject(AWS_S3_PROVIDER) private s3: S3,
     @Inject(AWS_ROUTE_53_PROVIDER) private route53: Route53,
     @Inject(AWS_CLOUDFRONT_PROVIDER) private cloudfront: CloudFront,
@@ -31,11 +30,11 @@ export class WebService extends BaseCrudService<Website> {
     super(repo)
   }
 
-  async uploadStaticFiles(user: AuthenticatedUser, files: File[]) {
+  async uploadStaticFiles(website: Websites, files: File[]) {
     try {
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
-          Bucket: user.website.websiteDomain,
+          Bucket: website.websiteDomain,
           Body: file.buffer,
           Key: file.fieldname,
           ContentType: file.mimetype,
@@ -47,7 +46,7 @@ export class WebService extends BaseCrudService<Website> {
           .then((res) => res.Bucket)
       })
 
-      await this.purgeCloudfront(user.website.cloudfrontDist.Id)
+      await this.purgeCloudfront(website.cloudfrontDist.Id)
       return Promise.all(fileUploads)
     } catch (error) {
       this.logger.error(error.message)
@@ -219,14 +218,12 @@ export class WebService extends BaseCrudService<Website> {
       .then((res) => res.CloudFrontOriginAccessIdentity.Id)
   }
 
-  async createAndConfigureCloudFront(user: AuthenticatedUser) {
+  async createAndConfigureCloudFront(website: Websites) {
     try {
-      const originId = await this.createCloudFrontOAI(
-        user.website.websiteDomain,
-      )
+      const originId = await this.createCloudFrontOAI(website.websiteDomain)
       const cloudfrontDist = await this.createCloudfrontDist(
-        user.website.websiteDomain,
-        user.website.bucketDomain,
+        website.websiteDomain,
+        website.bucketDomain,
         originId,
       )
 
@@ -235,12 +232,12 @@ export class WebService extends BaseCrudService<Website> {
         cloudfrontDist,
       }
 
-      const web = await this.repository.findOne({ alias: user.website.alias })
+      const web = await this.repository.findOne({ alias: website.alias })
       web.cloudfrontDist = cloudfrontDist
       web.originId = originId
       await this.repository.save(web)
 
-      await this.configureBucketPolicy(user.website.websiteDomain, originId)
+      await this.configureBucketPolicy(website.websiteDomain, originId)
       return update
     } catch (error) {
       this.logger.error(error)
@@ -248,7 +245,7 @@ export class WebService extends BaseCrudService<Website> {
     }
   }
 
-  async createRoute53Record(user: AuthenticatedUser) {
+  async createRoute53Record(website: Websites) {
     try {
       // Create traffic policy
       const document = {
@@ -258,16 +255,16 @@ export class WebService extends BaseCrudService<Website> {
               Action: 'CREATE',
               ResourceRecordSet: {
                 AliasTarget: {
-                  DNSName: user.website.cloudfrontDist.DomainName,
+                  DNSName: website.cloudfrontDist.DomainName,
                   EvaluateTargetHealth: false,
                   HostedZoneId: process.env.AWS_CLOUDFRONT_HOSTED_ZONE_ID,
                 },
-                Name: user.website.websiteDomain,
+                Name: website.websiteDomain,
                 Type: 'A',
               },
             },
           ],
-          Comment: `Route53 record for ${user.website.websiteDomain}`,
+          Comment: `Route53 record for ${website.websiteDomain}`,
         },
         HostedZoneId: process.env.AWS_ROUTE_53_HOSTED_ZONE_ID,
       }

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { Connection } from 'typeorm'
 
-import { User } from '../src/users/user.entity'
-import { Website } from '../src/web-hosting/website.entity'
+import { Role, User } from '../src/users/user.entity'
+import { Websites } from '../src/web-hosting/website.entity'
 import { AuthService } from '../src/auth/auth.service'
 
 @Injectable()
@@ -17,12 +17,12 @@ export class TestUtil {
     user.email = 'test@example.com'
     user.firstName = 'test'
     user.lastName = 'example'
-    user.roles = ['admin']
+    user.role = Role.Admin
 
-    const webRepository = this.connection.getRepository(Website)
-    const website = new Website()
+    const webRepository = this.connection.getRepository(Websites)
+    const website = new Websites()
     website.alias = 'mlem-test'
-    website.user = user
+    website.owner = user
     await webRepository.save(website)
 
     return { user, website }
