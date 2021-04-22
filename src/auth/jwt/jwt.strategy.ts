@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
   async validate(email: string): Promise<AuthenticatedUser | undefined> {
     const user = await this.userService.findOne({
       where: { email },
-      relations: ['website'],
+      relations: ['websites'],
     })
 
     if (!user) return undefined

@@ -3,7 +3,6 @@ import {
   UseInterceptors,
   Post,
   BadRequestException,
-  UseGuards,
   Param,
 } from '@nestjs/common'
 import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
@@ -17,12 +16,10 @@ import { BaseCrudController } from '../base.controller'
 import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
 import { Payload, File, UniqueExceptionCode } from './types'
-import { WebsiteLimitGuard } from './guard'
 
 @AppController(AppFeatures.WebHosting, {
   model: { type: Websites },
 })
-@UseGuards(WebsiteLimitGuard)
 export class WebHostingController extends BaseCrudController<Websites> {
   constructor(public service: WebService) {
     super()

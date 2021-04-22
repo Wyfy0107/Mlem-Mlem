@@ -5,10 +5,11 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston'
 import { AppFeatures } from './app.types'
 import { UserJwtGuard } from './auth/jwt/jwt.guard'
 import { RolesGuard } from './auth/roles/roles.guard'
+import { WebsiteLimitGuard } from './web-hosting/guard'
 
 const AppController = (feature: AppFeatures, crudOptions: CrudOptions) => {
   const decorators = [
-    UseGuards(UserJwtGuard),
+    UseGuards(UserJwtGuard, WebsiteLimitGuard),
     UseGuards(RolesGuard),
     Controller(feature),
     Crud(crudOptions),
