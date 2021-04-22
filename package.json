@@ -86,6 +86,12 @@
       "pre-commit": "lint-staged"
     }
   },
+  "lint-staged": {
+    "./{src,apps,libs,test}/**/*.{js,jsx,ts,tsx}": [
+      "npx prettier --write",
+      "npx eslint --max-warnings=0 --fix"
+    ]
+  },
   "jest": {
     "moduleFileExtensions": [
       "js",
