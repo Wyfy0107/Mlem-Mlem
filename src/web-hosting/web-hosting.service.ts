@@ -120,7 +120,6 @@ export class WebService extends BaseCrudService<Websites> {
       } = await this.cloudfront
         .waitFor('distributionDeployed', {
           Id: cloudfrontId,
-          $waiter: { delay: 1 },
         })
         .promise()
 
