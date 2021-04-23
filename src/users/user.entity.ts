@@ -15,7 +15,7 @@ export enum Role {
 }
 
 @Entity('users')
-export class User extends BaseEntity {
+export class Users extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -31,7 +31,10 @@ export class User extends BaseEntity {
   @Column()
   lastName: string
 
-  @OneToMany(() => Websites, (website) => website.owner, { eager: true })
+  @OneToMany(() => Websites, (website) => website.owner, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   websites: Websites[]
 

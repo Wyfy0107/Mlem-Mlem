@@ -4,10 +4,12 @@ import {
   Column,
   PrimaryGeneratedColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm'
-import { IsString } from 'class-validator'
-import { User } from '../users/user.entity'
 import { CloudFront } from 'aws-sdk'
+import { IsString } from 'class-validator'
+
+import { Users } from '../users/user.entity'
 
 @Entity('websites')
 export class Websites extends BaseEntity {
@@ -24,8 +26,12 @@ export class Websites extends BaseEntity {
   @Column({ nullable: true, unique: true })
   originId: string
 
-  @ManyToOne(() => User, (user) => user.websites, { cascade: true })
-  owner: User
+  @ManyToOne(() => Users, (user) => user.websites, { cascade: true })
+  @JoinColumn({ name: 'owner_id' })
+  owner: Users
+
+  @Column({ name: 'owner_id' })
+  ownerId: string
 
   // This is also the bucket name
   get websiteDomain() {

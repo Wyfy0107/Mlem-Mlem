@@ -1,3 +1,3 @@
-import { User } from '../users/user.entity'
+import { Users } from '../users/user.entity'
 
-export type AuthenticatedUser = Partial<User>
+export type AuthenticatedUser = Partial<Users>

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Connection } from 'typeorm'
 
-import { Role, User } from '../src/users/user.entity'
+import { Role, Users } from '../src/users/user.entity'
 import { Websites } from '../src/web-hosting/website.entity'
 import { AuthService } from '../src/auth/auth.service'
 
@@ -13,7 +13,7 @@ export class TestUtil {
   ) {}
 
   async beforeEach() {
-    const user = new User()
+    const user = new Users()
     user.email = 'test@example.com'
     user.firstName = 'test'
     user.lastName = 'example'

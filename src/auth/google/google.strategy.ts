@@ -4,7 +4,8 @@ import { Injectable } from '@nestjs/common'
 
 import { UserService } from '../../users/user.service'
 import { AuthenticatedUser } from '../types'
-import { GOOGLE_STRATEGY } from './google.const'
+import { ADMIN_EMAIL, GOOGLE_STRATEGY } from './google.const'
+import { Role } from 'src/users/user.entity'
 
 type GoogleIdTokenResponse = {
   payload: {
@@ -39,10 +40,13 @@ export class GoogleStrategy extends PassportStrategy(
 
     if (user) return user
 
+    const role = email === ADMIN_EMAIL ? Role.Admin : Role.User
+
     const newUser = {
       email,
       firstName,
       lastName,
+      role,
     }
 
     return this.userService.repository.save(newUser)

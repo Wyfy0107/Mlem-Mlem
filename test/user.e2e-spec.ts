@@ -4,12 +4,12 @@ import { INestApplication } from '@nestjs/common'
 
 import { AppModule } from '../src/app.module'
 import { TestUtil } from './util'
-import { User } from '../src/users/user.entity'
+import { Users } from '../src/users/user.entity'
 
 describe('User controller', () => {
   let app: INestApplication
   let testUtil: TestUtil
-  let adminUser: User
+  let adminUser: Users
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
