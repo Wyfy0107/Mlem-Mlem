@@ -109,28 +109,43 @@ export class WebService extends BaseCrudService<Websites> {
     }
   }
 
-  async configureBucketPolicy(bucketName: string, originId: string) {
+  async configureBucketPolicy(
+    bucketName: string,
+    originId: string,
+    cloudfrontId: string,
+  ) {
     try {
-      const policy = {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Effect: 'Allow',
-            Principal: {
-              AWS: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${originId}`,
+      const {
+        Distribution: { Status },
+      } = await this.cloudfront
+        .waitFor('distributionDeployed', {
+          Id: cloudfrontId,
+          $waiter: { delay: 1 },
+        })
+        .promise()
+
+      if (Status === 'Deployed') {
+        const policy = {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Effect: 'Allow',
+              Principal: {
+                AWS: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${originId}`,
+              },
+              Action: 's3:GetObject',
+              Resource: `arn:aws:s3:::${bucketName}/*`,
             },
-            Action: 's3:GetObject',
-            Resource: `arn:aws:s3:::${bucketName}/*`,
-          },
-        ],
-      }
+          ],
+        }
 
-      const params = {
-        Bucket: bucketName,
-        Policy: JSON.stringify(policy),
-      }
+        const params = {
+          Bucket: bucketName,
+          Policy: JSON.stringify(policy),
+        }
 
-      return this.s3.putBucketPolicy(params).promise()
+        return this.s3.putBucketPolicy(params).promise()
+      }
     } catch (error) {
       this.logger.error(error.message)
       throw new InternalServerErrorException(error.message)
@@ -237,7 +252,11 @@ export class WebService extends BaseCrudService<Websites> {
       web.originId = originId
       await this.repository.save(web)
 
-      await this.configureBucketPolicy(website.websiteDomain, originId)
+      await this.configureBucketPolicy(
+        website.websiteDomain,
+        originId,
+        cloudfrontDist.Id,
+      )
       return update
     } catch (error) {
       this.logger.error(error)
