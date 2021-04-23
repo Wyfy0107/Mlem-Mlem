@@ -26,7 +26,9 @@ export class Websites extends BaseEntity {
   @Column({ nullable: true, unique: true })
   originId: string
 
-  @ManyToOne(() => Users, (user) => user.websites, { cascade: true })
+  @ManyToOne(() => Users, (user) => user.websites, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'owner_id' })
   owner: Users
 

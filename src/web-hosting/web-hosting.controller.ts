@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common'
 import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
@@ -17,6 +18,7 @@ import { BaseCrudController } from '../base.controller'
 import { User } from '../users/user.decorator'
 import { AuthenticatedUser } from '../auth/types'
 import { Payload, File, UniqueExceptionCode } from './types'
+import { WebsiteLimitGuard } from './guard'
 
 @AppController(AppFeatures.WebHosting, {
   model: { type: Websites },
@@ -27,6 +29,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Override()
+  @UseGuards(WebsiteLimitGuard)
   createOne(
     @ParsedRequest() request,
     @ParsedBody() body: Payload,
@@ -41,6 +44,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Post('/bucket')
+  @UseGuards(WebsiteLimitGuard)
   async createBucket(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
@@ -50,7 +54,8 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Post('/cloudfront')
-  async createOAI(@Body() body: Payload) {
+  @UseGuards(WebsiteLimitGuard)
+  async createCloudfront(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
     })
@@ -59,6 +64,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Post('/record')
+  @UseGuards(WebsiteLimitGuard)
   async createRecord(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
@@ -68,6 +74,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @UseInterceptors(AnyFilesInterceptor())
+  @UseGuards(WebsiteLimitGuard)
   @Post('/bucket/upload/:alias')
   async uploadFiles(
     @UploadedFiles() files: File[],

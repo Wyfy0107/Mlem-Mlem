@@ -33,7 +33,7 @@ export class Users extends BaseEntity {
 
   @OneToMany(() => Websites, (website) => website.owner, {
     eager: true,
-    onDelete: 'CASCADE',
+    cascade: true,
   })
   @JoinColumn()
   websites: Websites[]
