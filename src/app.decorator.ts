@@ -9,11 +9,15 @@ import { WebsiteLimitGuard } from './web-hosting/guard'
 
 const AppController = (feature: AppFeatures, crudOptions: CrudOptions) => {
   const decorators = [
-    UseGuards(UserJwtGuard, WebsiteLimitGuard),
+    UseGuards(UserJwtGuard),
     UseGuards(RolesGuard),
     Controller(feature),
     Crud(crudOptions),
   ]
+
+  if (feature === AppFeatures.WebHosting) {
+    decorators.push(UseGuards(WebsiteLimitGuard))
+  }
 
   return applyDecorators(...decorators)
 }

@@ -4,6 +4,7 @@ import {
   Post,
   BadRequestException,
   Param,
+  Body,
 } from '@nestjs/common'
 import { Override, ParsedBody, ParsedRequest } from '@nestjsx/crud'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
@@ -40,7 +41,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Post('/bucket')
-  async createBucket(@ParsedBody() body: Payload) {
+  async createBucket(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
     })
@@ -49,7 +50,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Post('/cloudfront')
-  async createOAI(@ParsedBody() body: Payload) {
+  async createOAI(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
     })
@@ -58,7 +59,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   }
 
   @Post('/record')
-  async createRecord(@ParsedBody() body: Payload) {
+  async createRecord(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
     })
