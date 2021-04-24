@@ -38,6 +38,9 @@ export class Users extends BaseEntity {
   @JoinColumn()
   websites: Websites[]
 
+  @Column({ default: 0 })
+  websiteNumber: number
+
   @Column({ type: 'enum', enum: Role, default: Role.User })
   role: Role
 }

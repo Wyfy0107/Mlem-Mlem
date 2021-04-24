@@ -10,7 +10,7 @@ import { AuthenticatedUser } from 'src/auth/types'
 export class WebsiteLimitGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean | Promise<boolean> {
     const user = context.switchToHttp().getRequest().user as AuthenticatedUser
-    const count = user.websites.length
+    const count = user.websiteNumber
 
     if (count >= 2) {
       throw new BadRequestException('You can not deploy more than 2 websites')

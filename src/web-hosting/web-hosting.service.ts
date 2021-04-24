@@ -287,7 +287,16 @@ export class WebService extends BaseCrudService<Websites> {
         HostedZoneId: process.env.AWS_ROUTE_53_HOSTED_ZONE_ID,
       }
 
-      return this.route53.changeResourceRecordSets(document).promise()
+      const data = await this.route53
+        .changeResourceRecordSets(document)
+        .promise()
+        .then((res) => res.ChangeInfo)
+
+      website.recordId = data.Id
+      website.owner.websiteNumber++
+      await this.repository.save(website)
+
+      return data
     } catch (error) {
       this.logger.error(error.message)
       throw new InternalServerErrorException(error.message)

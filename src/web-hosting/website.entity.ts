@@ -26,6 +26,9 @@ export class Websites extends BaseEntity {
   @Column({ nullable: true, unique: true })
   originId: string
 
+  @Column({ nullable: true, unique: true })
+  recordId: string
+
   @ManyToOne(() => Users, (user) => user.websites, {
     onDelete: 'CASCADE',
   })
