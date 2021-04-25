@@ -6,6 +6,10 @@ import { AuthenticatedUser } from '../types'
 import { UserService } from '../../users/user.service'
 import { JWT_STRATEGY } from './jwt.const'
 
+type JWTPayload = {
+  email: string
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
   constructor(private userService: UserService) {
@@ -16,7 +20,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
     })
   }
 
-  async validate(email: string): Promise<AuthenticatedUser | undefined> {
+  async validate({
+    email,
+  }: JWTPayload): Promise<AuthenticatedUser | undefined> {
     const user = await this.userService.findOne({
       where: { email },
       relations: ['websites'],

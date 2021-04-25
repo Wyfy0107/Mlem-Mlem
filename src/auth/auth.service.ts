@@ -7,7 +7,7 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   sign(email: string) {
-    return this.jwtService.sign(email)
+    return this.jwtService.sign({ email }, { expiresIn: '4h' })
   }
 
   login(user: AuthenticatedUser) {
