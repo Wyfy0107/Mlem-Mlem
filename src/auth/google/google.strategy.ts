@@ -2,7 +2,7 @@ import { PassportStrategy } from '@nestjs/passport'
 import * as GoogleIdTokenStrategy from 'passport-google-id-token'
 import { Injectable } from '@nestjs/common'
 
-import { UserService } from '../../users/user.service'
+import { UsersService } from '../../users/user.service'
 import { AuthenticatedUser } from '../types'
 import { ADMIN_EMAIL, GOOGLE_STRATEGY } from './google.const'
 import { Role } from 'src/users/user.entity'
@@ -24,7 +24,7 @@ export class GoogleStrategy extends PassportStrategy(
   GoogleIdTokenStrategy,
   GOOGLE_STRATEGY,
 ) {
-  constructor(private userService: UserService) {
+  constructor(private userService: UsersService) {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
     })

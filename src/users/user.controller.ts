@@ -1,4 +1,4 @@
-import { UserService } from './user.service'
+import { UsersService } from './user.service'
 import { Role, Users } from './user.entity'
 import { BaseCrudController } from '../base.controller'
 import AppController from '../app.decorator'
@@ -20,7 +20,7 @@ import { WithRole } from '../auth/auth.decorator'
 })
 @WithRole(Role.Admin)
 export class UserController extends BaseCrudController<Users> {
-  constructor(public service: UserService) {
+  constructor(public service: UsersService) {
     super()
   }
 }

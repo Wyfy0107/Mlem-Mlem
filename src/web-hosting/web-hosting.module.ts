@@ -6,6 +6,7 @@ import { WebHostingController } from './web-hosting.controller'
 import { WebService } from './web-hosting.service'
 import { AwsModule } from '../aws/aws.module'
 import { Websites } from './website.entity'
+import { UserModule } from 'src/users/user.module'
 
 @Module({
   controllers: [WebHostingController],
@@ -14,6 +15,7 @@ import { Websites } from './website.entity'
     ConfigModule.forRoot(),
     TypeOrmModule.forFeature([Websites]),
     AwsModule,
+    UserModule,
   ],
 })
 export class WebHostingModule {}

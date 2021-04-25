@@ -7,7 +7,7 @@ import { BaseCrudService } from '../base.service'
 import { AuthService } from '../auth/auth.service'
 
 @Injectable()
-export class UserService extends BaseCrudService<Users> {
+export class UsersService extends BaseCrudService<Users> {
   constructor(
     @InjectRepository(Users) repo: Repository<Users>,
     private authService: AuthService,

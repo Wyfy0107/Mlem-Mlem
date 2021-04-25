@@ -80,11 +80,13 @@ export class WebHostingController extends BaseCrudController<Websites> {
   async uploadFiles(
     @UploadedFiles() files: File[],
     @Param('alias') alias: Payload,
+    @User() user: AuthenticatedUser,
   ) {
     const website = await this.service.repository.findOne({
       where: { alias },
+      relations: ['owner'],
     })
 
-    return this.service.uploadStaticFiles(website, files)
+    return this.service.uploadStaticFiles(website, user, files)
   }
 }

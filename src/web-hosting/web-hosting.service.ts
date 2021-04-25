@@ -17,6 +17,8 @@ import { BaseCrudService } from '../base.service'
 import { Websites } from './website.entity'
 import { InjectLogger } from '../app.decorator'
 import { File } from './types'
+import { UsersService } from 'src/users/user.service'
+import { AuthenticatedUser } from 'src/auth/types'
 
 @Injectable()
 export class WebService extends BaseCrudService<Websites> {
@@ -26,11 +28,16 @@ export class WebService extends BaseCrudService<Websites> {
     @Inject(AWS_ROUTE_53_PROVIDER) private route53: Route53,
     @Inject(AWS_CLOUDFRONT_PROVIDER) private cloudfront: CloudFront,
     @InjectLogger() private logger: Logger,
+    private usersService: UsersService,
   ) {
     super(repo)
   }
 
-  async uploadStaticFiles(website: Websites, files: File[]) {
+  async uploadStaticFiles(
+    website: Websites,
+    user: AuthenticatedUser,
+    files: File[],
+  ) {
     try {
       const fileUploads = files.map(async (file) => {
         const uploadParam = {
@@ -45,6 +52,9 @@ export class WebService extends BaseCrudService<Websites> {
           .promise()
           .then((res) => res.Bucket)
       })
+
+      user.websiteNumber++
+      await this.usersService.repository.save(user)
 
       await this.purgeCloudfront(website.cloudfrontDist.Id)
       return Promise.all(fileUploads)
@@ -293,7 +303,6 @@ export class WebService extends BaseCrudService<Websites> {
         .then((res) => res.ChangeInfo)
 
       website.recordId = data.Id
-      website.owner.websiteNumber++
       await this.repository.save(website)
 
       return data
