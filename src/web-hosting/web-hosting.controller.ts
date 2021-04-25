@@ -68,6 +68,7 @@ export class WebHostingController extends BaseCrudController<Websites> {
   async createRecord(@Body() body: Payload) {
     const website = await this.service.repository.findOne({
       where: { alias: body.alias },
+      relations: ['owner'],
     })
 
     return this.service.createRoute53Record(website)
