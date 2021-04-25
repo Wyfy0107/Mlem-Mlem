@@ -14,8 +14,4 @@ export class UsersService extends BaseCrudService<Users> {
   ) {
     super(repo)
   }
-
-  getToken(email: string) {
-    return this.authService.sign(email)
-  }
 }
